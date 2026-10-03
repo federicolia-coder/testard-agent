@@ -1,6 +1,6 @@
 # testard-agent
 
-A small, readable shell script that reports a Linux server's health to [Testard](https://platform.testardstudios.it), so servers at any provider (a VPS, a cloud VM, a machine in your office) show up next to your AWS, Google Cloud, Azure, Hetzner and DigitalOcean resources.
+A small, readable script that reports a Linux or Windows server's health to [Testard](https://platform.testardstudios.it), so servers at any provider (a VPS, a cloud VM, a machine in your office) show up next to your AWS, Google Cloud, Azure, Hetzner and DigitalOcean resources.
 
 ## Install
 
@@ -15,6 +15,16 @@ The server appears in Testard within a minute.
 
 Requirements: Linux, `curl`, and either systemd or cron. Tested with `dash` and `bash`.
 
+### Windows
+
+Pick **Windows** in the same dialog. In PowerShell opened with **Run as administrator**, paste the command it shows you:
+
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; & ([scriptblock]::Create((irm https://raw.githubusercontent.com/federicolia-coder/testard-agent/main/install.ps1))) -Key tsk_... -Url https://platform.testardstudios.it
+```
+
+Requirements: Windows 10 or Windows Server 2016 and later, with the built-in Windows PowerShell 5.1. Nothing else to install.
+
 ## What it sends
 
 Once a minute, one HTTPS request with:
@@ -27,14 +37,17 @@ Once a minute, one HTTPS request with:
 | network throughput | `/proc/net/dev`, all interfaces except loopback |
 | uptime, load average, private IP | `/proc/uptime`, `/proc/loadavg`, `ip route` |
 
-No file contents, process lists, environment variables, users or logs. Read [`testard-agent`](testard-agent): it's about 125 lines.
+On Windows the same figures come from `Win32_OperatingSystem`, `Win32_Processor` (load percentage), `Win32_LogicalDisk` (the system drive) and .NET's network interface statistics. Windows has no load average, so none is sent.
+
+No file contents, process lists, environment variables, users or logs. Read [`testard-agent`](testard-agent) (Linux, about 125 lines) or [`testard-agent.ps1`](testard-agent.ps1) (Windows).
 
 ## What it never does
 
 It never receives or runs commands. The key only allows submitting reports for this one server, so a leaked key can't be used to control the machine. To see exactly what would be sent:
 
 ```sh
-testard-agent collect
+testard-agent collect                                            # Linux
+& "$env:ProgramFiles\TestardAgent\testard-agent.ps1" collect     # Windows
 ```
 
 ## How it runs
@@ -46,6 +59,16 @@ testard-agent collect
 ```sh
 testard-agent status              # configuration and last result
 sudo testard-agent uninstall      # removes the agent, timer, user and files
+```
+
+On Windows:
+
+- Installed to `C:\Program Files\TestardAgent\testard-agent.ps1`, which only administrators can change. A scheduled task, **Testard agent**, runs it every minute as the built-in `LOCAL SERVICE` account, which has no admin rights.
+- The address and key are in `C:\ProgramData\TestardAgent`, readable only by `LOCAL SERVICE`, `SYSTEM` and administrators. The key is sent as a request header, never on a command line.
+
+```powershell
+& "$env:ProgramFiles\TestardAgent\testard-agent.ps1" status      # configuration and last result
+& "$env:ProgramFiles\TestardAgent\testard-agent.ps1" uninstall   # elevated: removes the task and files
 ```
 
 If a key is lost or leaked, create a new one in Testard (connection menu → **New agent key**) and run the install command again. The old key stops working immediately.
