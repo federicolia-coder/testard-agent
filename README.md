@@ -1,6 +1,15 @@
+<p>
+  <a href="https://platform.testardstudios.it">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/testard-wordmark-on-dark.svg">
+      <img src="assets/testard-wordmark.svg" alt="testard." width="220">
+    </picture>
+  </a>
+</p>
+
 # testard-agent
 
-A small, readable script that reports a Linux or Windows server's health to [Testard](https://platform.testardstudios.it), so servers at any provider (a VPS, a cloud VM, a machine in your office) show up next to your AWS, Google Cloud, Azure, Hetzner and DigitalOcean resources.
+A small, readable script that reports a Linux or Windows server's health to [Testard](https://platform.testardstudios.it), so servers at any provider (a VPS, a cloud VM, a machine in your office) show up next to your AWS, Google Cloud, Hetzner, DigitalOcean, Supabase and Cloudflare resources.
 
 ## Install
 
